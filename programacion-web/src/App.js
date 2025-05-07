@@ -1,37 +1,24 @@
-import React, { useState } from 'react';
-import './styles/App.css';
-import Navbar from './components/Navbar';
-import RoleSelector from './components/RoleSelector';
-import QuestionEditor from './components/QuestionEditor';
-import QuestionList from './components/QuestionList';
-import ExportOptions from './components/ExportOptions';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import Seleccion from './components/seleccion';
+import Drag from './components/DragDrop';
 
 function App() {
-  const [userRole, setUserRole] = useState('professor');
-  const [questions, setQuestions] = useState([]);
-  const [activeTab, setActiveTab] = useState('editor');
-
+    // <Router>
+    //  <nav className="p-4 bg-gray-200 flex gap-4">
+    //  <Link to="/seleccion" className="text-blue-600 hover:underline">Crear</Link>
+    //  <Link to="/drag" className="text-blue-600 hover:underline">Arrastrar y Soltar</Link>
+    //  </nav>
+    //   <Routes>
+    //     <Route path="/seleccion" element={<Seleccion />} />
+    //     <Route path="/DragDrop" element={<Drag/>} />
+    //   </Routes>
+    // </Router>
   return (
-    <div className="app">
-      <Navbar userRole={userRole} />
-      <RoleSelector userRole={userRole} setUserRole={setUserRole} />
-      
-      <div className="main-content">
-        {activeTab === 'editor' && (
-          <QuestionEditor 
-            questions={questions} 
-            setQuestions={setQuestions} 
-            userRole={userRole}
-          />
-        )}
-        {activeTab === 'list' && (
-          <QuestionList questions={questions} />
-        )}
-        {activeTab === 'export' && userRole === 'professor' && (
-          <ExportOptions questions={questions} />
-        )}
-      </div>
-    </div>
+
+    <>
+      <Drag/>
+    </>
   );
 }
 

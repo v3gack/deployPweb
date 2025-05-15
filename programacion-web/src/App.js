@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import Seleccion from './components/seleccion';
 import Drag from './components/DragDrop';
+import Question from './components/Pregunta';
 
 function App() {
  
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/seleccion" element={<Seleccion />} />
         <Route path="/Drag" element={< Drag/>} />
+        <Route path="/question" element={< Question/>} />
       </Routes>
     </Router>
     

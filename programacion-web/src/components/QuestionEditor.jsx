@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './EditorPregunta.css';
+//import '../../styles/QuestionEditor.css'; 
 
 export default function InteractiveQuestionEditor() {
   const [title, setTitle] = useState('');

@@ -16,6 +16,7 @@ const Pieza = ({ pieza, origen }) => {
   });
 
   return (
+
     <div
       ref={drag}
       className="pieza"

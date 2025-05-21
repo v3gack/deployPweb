@@ -1,24 +1,22 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Seleccion from './components/seleccion';
 import Drag from './components/DragDrop';
 import Question from './components/Pregunta';
+import Login from './components/Registros/Login'; // Mayúscula y ruta correcta
+import RegistroUsuario from './components/Registros/RegistroUsuario'; // Mayúscula y ruta correcta
 
 function App() {
- 
   return (
-  <Router>
-     <nav className="p-4 bg-gray-200 flex gap-4">
-     <Link to="/seleccion" className="text-blue-600 hover:underline">Crear</Link>
-     <Link to="/drag" className="text-blue-600 hover:underline">Arrastrar y Soltar</Link>
-     </nav>
+    <Router>
       <Routes>
         <Route path="/seleccion" element={<Seleccion />} />
-        <Route path="/Drag" element={< Drag/>} />
-        <Route path="/question" element={< Question/>} />
+        <Route path="/Drag" element={<Drag />} />
+        <Route path="/question" element={<Question />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/registroUsuario" element={<RegistroUsuario />} />
       </Routes>
     </Router>
-    
   );
 }
 

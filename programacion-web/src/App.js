@@ -6,6 +6,7 @@ import Question from './components/Pregunta';
 import Login from './components/Registros/Login';
 import RegistroUsuario from './components/Registros/RegistroUsuario';
 import RellenarEspacios from './components/RellenarEspacios';
+import Castor from './components/preguntaCastor';
 
 import Layout from './components/Layout'; // Añade esta línea
 
@@ -24,6 +25,7 @@ function App() {
               <Route path="/Drag" element={<Drag />} />
               <Route path="/question" element={<Question />} />
               <Route path="/Rellenar" element={<RellenarEspacios/>} />
+              <Route path="/Castor" element={<Castor/>} />
             </Routes>
           </Layout>
         } />

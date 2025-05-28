@@ -1,22 +1,15 @@
 import React, { useState } from 'react';
-import Navbar from './Navbar';
-import RoleSelector from './RoleSelector';
 import QuestionEditor from './QuestionEditor';
 import QuestionList from './QuestionList';
 import ExportOptions from './ExportOptions';
 import '../styles/App.css';
 
-
-const Seleccion = () => {
-  const [userRole, setUserRole] = useState('professor');
+const Seleccion = ({ userRole }) => {
   const [questions, setQuestions] = useState([]);
-  const [activeTab, setActiveTab] = useState('editor');
+  const [activeTab] = useState('editor'); // Eliminamos setActiveTab si no se usa
 
   return (
     <div className="app">
-      <Navbar userRole={userRole} />
-      <RoleSelector userRole={userRole} setUserRole={setUserRole} />
-
       <div className="main-content">
         {activeTab === 'editor' && (
           <QuestionEditor 

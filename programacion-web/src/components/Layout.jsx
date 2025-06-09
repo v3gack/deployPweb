@@ -1,14 +1,15 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import Navbar from './Navbar';
 import RoleSelector from './RoleSelector';
 
-const Layout = ({ children, userRole, setUserRole }) => {
+const Layout = ({ userRole, setUserRole }) => {
   return (
     <div className="app-container">
       <Navbar userRole={userRole} />
       <RoleSelector userRole={userRole} setUserRole={setUserRole} />
       <div className="main-content">
-        {children}
+        <Outlet />
       </div>
     </div>
   );

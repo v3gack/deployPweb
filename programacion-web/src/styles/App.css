@@ -20,6 +20,17 @@ body {
   align-items: center;
 }
 
+
+.link {
+  color: blue; /* Color por defecto */
+  cursor: pointer; /* Indica que es clickeable */
+  text-decoration: underline; /* Para resaltar aún más */
+}
+
+.link:hover {
+  color: red; /* Cambia a rojo cuando se pasa el cursor */
+}
+
 .user-info {
   display: flex;
   align-items: center;

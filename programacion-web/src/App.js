@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Seleccion from './components/seleccion';
 import Drag from './components/DragDrop';
 import Question from './components/Pregunta';
@@ -7,8 +7,9 @@ import Login from './components/Registros/Login';
 import RegistroUsuario from './components/Registros/RegistroUsuario';
 import RellenarEspacios from './components/RellenarEspacios';
 import Castor from './components/preguntaCastor';
-
-import Layout from './components/Layout'; // Añade esta línea
+import Layout from './components/Layout';
+import Inicio from './components/Inicio';
+import PrivateRoute from './components/PrivateRoute'; // ← nuevo
 
 function App() {
   const [userRole, setUserRole] = useState('professor');
@@ -16,19 +17,27 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login />} />
         <Route path="/registroUsuario" element={<RegistroUsuario />} />
-        <Route path="*" element={
-          <Layout userRole={userRole} setUserRole={setUserRole}>
-            <Routes>
-              <Route path="/seleccion" element={<Seleccion userRole={userRole} />} />
-              <Route path="/Drag" element={<Drag />} />
-              <Route path="/question" element={<Question />} />
-              <Route path="/Rellenar" element={<RellenarEspacios/>} />
-              <Route path="/Castor" element={<Castor/>} />
-            </Routes>
-          </Layout>
-        } />
+
+        {/* Rutas protegidas */}
+        <Route
+          element={
+            <PrivateRoute>
+              <Layout userRole={userRole} setUserRole={setUserRole} />
+            </PrivateRoute>
+          }
+        >
+          <Route path="/inicio" element={<Inicio />} />
+          <Route path="/seleccion" element={<Seleccion userRole={userRole} />} />
+          <Route path="/Drag" element={<Drag />} />
+          <Route path="/question" element={<Question />} />
+          <Route path="/Rellenar" element={<RellenarEspacios />} />
+          <Route path="/Castor" element={<Castor />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
   );

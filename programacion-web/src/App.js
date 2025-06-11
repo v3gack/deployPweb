@@ -10,6 +10,7 @@ import Castor from './components/preguntaCastor';
 import Layout from './components/Layout';
 import Inicio from './components/Inicio';
 import PrivateRoute from './components/PrivateRoute'; // ← nuevo
+import PuzzleRotate from './components/PuzzleRotate';
 
 function App() {
   const [userRole, setUserRole] = useState('professor');
@@ -35,6 +36,7 @@ function App() {
           <Route path="/question" element={<Question />} />
           <Route path="/Rellenar" element={<RellenarEspacios />} />
           <Route path="/Castor" element={<Castor />} />
+          <Route path="/Puzzle" element={<PuzzleRotate />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/login" />} />

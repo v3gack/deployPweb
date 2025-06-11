@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { DndProvider, useDrag } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import './DragDrop.css';
+import '../styles/DragDrop.css';
 
 const ItemTypes = {
   IMAGE: 'image',

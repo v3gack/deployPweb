@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './RellenarEspacios.css';
+import '../styles/RellenarEspacios.css';
 
 const wordBank = [
   'paradigma', 'objetos', 'Modularidad', 'Reutilizacion',

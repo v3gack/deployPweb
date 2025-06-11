@@ -1,50 +1,63 @@
 import React, { useState } from 'react';
-import './preguntaCastor.css';
+import '../styles/preguntaCastor.css';
 
-const piezas = ['castor1', 'castor2', 'castor3', 'castor4', 'castor5'];
-const solucion = ['castor2', 'castor4', 'castor3', 'castor1', 'castor5'];
+const piezasIniciales = ['pan1', 'lechuga', 'pan2', 'queso', 'jamon'];
 
 export default function CastorAnimation() {
   const [slots, setSlots] = useState(Array(5).fill(null));
-  const [tray, setTray] = useState(piezas);
+  const [tray, setTray] = useState(piezasIniciales);
   const [mostrarSolucion, setMostrarSolucion] = useState(false);
   const [resultado, setResultado] = useState(null); // 'correcto' | 'incorrecto' | null
 
   const handleDrop = (index, pieza) => {
-    const nuevasSlots = [...slots];
-    if (!nuevasSlots[index]) {
+    if (slots[index] !== null) return;
+    setSlots((prev) => {
+      const nuevasSlots = [...prev];
       nuevasSlots[index] = pieza;
-      setSlots(nuevasSlots);
-      setTray(prev => prev.filter(p => p !== pieza));
-    }
+      return nuevasSlots;
+    });
+    setTray((prev) => prev.filter((p) => p !== pieza));
   };
 
   const handleReturnToTray = (pieza, index) => {
-    const nuevasSlots = [...slots];
-    nuevasSlots[index] = null;
-    setSlots(nuevasSlots);
-    setTray(prev => [...prev, pieza]);
+    setSlots((prev) => {
+      const nuevasSlots = [...prev];
+      nuevasSlots[index] = null;
+      return nuevasSlots;
+    });
+    setTray((prev) => [...prev, pieza]);
   };
 
   const verificar = () => {
-    const esCorrecto = solucion.every((item, i) => slots[i] === item);
+    const extremos = [slots[0], slots[4]].sort().join(',');
+    if (extremos !== ['pan1','pan2'].sort().join(',')) {
+      setResultado('incorrecto');
+      setMostrarSolucion(true);
+      return;
+    }
+
+    const medio = [slots[1], slots[2], slots[3]].sort().join(',');
+    const esperado = ['lechuga', 'jamon', 'queso'].sort().join(',');
+    const esCorrecto = medio === esperado;
+
     setResultado(esCorrecto ? 'correcto' : 'incorrecto');
-    setMostrarSolucion(true);  
+    setMostrarSolucion(true);
   };
 
   const reintentar = () => {
     setSlots(Array(5).fill(null));
-    setTray(piezas);
+    setTray(piezasIniciales);
     setMostrarSolucion(false);
     setResultado(null);
   };
 
   return (
     <div className="contenedor-principal">
-      <h1>Ordena la animación del castor</h1>
+      <h1>ARMA EL SÁNDWICH</h1>
       <p className="enunciado">
-        Ordena los frames de animación del castor para obtener la solución al final de la secuencia. 
-        Para poder ser una animación fluida, solamente se puede hacer un cambio en el aspecto del castor.
+        Pablo te pide ayuda para armar su sandwich ya que tiene mucha hambre, tiene tanta
+        hambre que no le importa el orden en el cual pongas los ingredientes, a excepcion de los panes,
+        solo quiere su sandwich.
       </p>
 
       <div className="slots">
@@ -72,7 +85,7 @@ export default function CastorAnimation() {
         ))}
         <span className="igual" aria-hidden="true">=</span>
         <div className="slot solucion">
-          <img src="/images/castorSolucion.png" alt="castor final" />
+          <img src="/images/completo.png" alt="castor final" />
         </div>
       </div>
 
@@ -93,7 +106,6 @@ export default function CastorAnimation() {
         <button className="reintentar" onClick={reintentar}>Reintentar</button>
       </div>
 
-      {/* Mensaje de resultado */}
       {resultado === 'correcto' && (
         <div className="mensaje-resultado correcto">¡Correcto!</div>
       )}
@@ -103,21 +115,25 @@ export default function CastorAnimation() {
 
       {mostrarSolucion && (
         <div className="solucion-correcta">
-          <h3>Solución correcta:</h3>
+          <h3>Tu secuencia:</h3>
           <div className="slots">
-            {solucion.map((pieza, i) => (
+            {slots.map((pieza, i) => (
               <React.Fragment key={i}>
                 <div className="slot">
-                  <img src={`/images/${pieza}.png`} alt={pieza} />
+                  {pieza ? (
+                    <img src={`/images/${pieza}.png`} alt={pieza} />
+                  ) : (
+                    <div className="slot-vacio" />
+                  )}
                 </div>
-                {i < solucion.length - 1 && (
+                {i < slots.length - 1 && (
                   <span className="flecha" aria-hidden="true">→</span>
                 )}
               </React.Fragment>
             ))}
             <span className="igual" aria-hidden="true">=</span>
             <div className="slot solucion">
-              <img src="/images/castorSolucion.png" alt="castor final" />
+              <img src="/images/completo.png" alt="castor final" />
             </div>
           </div>
         </div>

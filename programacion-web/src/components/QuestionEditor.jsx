@@ -1,88 +1,121 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import '../styles/QuestionEditor.css';
 
 export default function InteractiveQuestionEditor() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [respuestaFiles, setRespuestaFiles] = useState([]);
-  const [respuestaSymbols, setRespuestaSymbols] = useState([]); // array de "<" o "=" de longitud n-1
+  const [respuestaSymbols, setRespuestaSymbols] = useState([]);
   const [additionalFiles, setAdditionalFiles] = useState([]);
-  const [grado, setGrado] = useState('primaria');
-  const [dificultad, setDificultad] = useState('easy');
+  const [grado, setGrado] = useState('PRIMARIA_1');
+  const [dificultad, setDificultad] = useState('FACIL');
 
-  // ---- Respuesta (secuencia parcial) ----
+  // Para drag and drop
+  const dragItem = useRef();
+  const dragOverItem = useRef();
+
+  // Ajusta symbols cuando cambien archivos
+  useEffect(() => {
+    const n = respuestaFiles.length;
+    if (n <= 1) {
+      setRespuestaSymbols([]);
+      return;
+    }
+    setRespuestaSymbols(oldSyms => {
+      const len = n - 1;
+      return Array.from({length: len}, (_, i) => oldSyms[i] ?? '<');
+    });
+  }, [respuestaFiles]);
+
   const handleRespuestaChange = (e) => {
     const files = Array.from(e.target.files);
-    setRespuestaFiles((prev) => {
-      const newFiles = [...prev, ...files];
-      setRespuestaSymbols((prevSym) => {
-        const extra = files.map(() => '<');
-        return [...prevSym, ...extra];
-      });
-      return newFiles;
-    });
+    e.target.value = null;
+    setRespuestaFiles(files);
   };
 
-  const removeRespuesta = (index) => {
-    setRespuestaFiles((files) => files.filter((_, i) => i !== index));
-    setRespuestaSymbols((syms) => {
-      const newSyms = [...syms];
-      newSyms.splice(index, 1);
-      return newSyms;
-    });
+  const removeRespuesta = (idx) => {
+    setRespuestaFiles(files => files.filter((_, i) => i !== idx));
   };
 
   const toggleSymbol = (idx) => {
-    setRespuestaSymbols((syms) => {
-      const newSyms = [...syms];
-      newSyms[idx] = newSyms[idx] === '<' ? '=' : '<';
-      return newSyms;
-    });
+    setRespuestaSymbols(syms =>
+      syms.map((s, i) => i === idx ? (s === '<' ? '=' : '<') : s)
+    );
   };
 
-  // ---- Imágenes adicionales ----
+  // Drag start
+  const onDragStart = (e, index) => {
+    dragItem.current = index;
+  };
+
+  // Drag enter over another
+  const onDragEnter = (e, index) => {
+    dragOverItem.current = index;
+  };
+
+  // Drop and reorder
+  const onDragEnd = () => {
+    const srcIdx = dragItem.current;
+    const destIdx = dragOverItem.current;
+    if (srcIdx === undefined || destIdx === undefined) return;
+
+    const filesCopy = Array.from(respuestaFiles);
+    const [moved] = filesCopy.splice(srcIdx, 1);
+    filesCopy.splice(destIdx, 0, moved);
+
+    setRespuestaFiles(filesCopy);
+    // limpiar refs
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
   const handleAdditionalChange = (e) => {
     const files = Array.from(e.target.files);
-    setAdditionalFiles((prev) => [...prev, ...files]);
+    e.target.value = null;
+    setAdditionalFiles(prev => [...prev, ...files]);
   };
 
   const removeAdditional = (index) => {
-    setAdditionalFiles((files) => files.filter((_, i) => i !== index));
+    setAdditionalFiles(files => files.filter((_, i) => i !== index));
   };
 
-  // ---- Envío ----
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('grado', grado);
-    formData.append('dificultad', dificultad);
+    if (!title.trim()) throw new Error('El título es requerido');
+    if (respuestaFiles.length === 0) throw new Error('Debe agregar al menos una imagen de respuesta');
 
-    // Respuesta (parcial)
-    respuestaFiles.forEach((file, idx) => {
-      formData.append(`respuesta_${idx}`, file);
-    });
-    respuestaSymbols.forEach((sym, idx) => {
-      formData.append(`respuesta_symbol_${idx}`, sym);
-    });
+    const respuestaUrls = respuestaFiles.map(file =>
+      `C:/Users/josue/Documents/PROGRA WEB/Programacion-Web/programacion-web/public/images/${file.name}`
+    );
+    const adicionalesUrls = additionalFiles.map(file =>
+      `C:/Users/josue/Documents/PROGRA WEB/Programacion-Web/programacion-web/public/images/${file.name}`
+    );
 
-    // Imágenes adicionales
-    additionalFiles.forEach((file, idx) => {
-      formData.append(`additional_${idx}`, file);
-    });
+    let sequence = [1];
+    for (let i = 0; i < respuestaSymbols.length; i++) {
+      sequence.push(respuestaSymbols[i] === '<' ? sequence[sequence.length - 1] + 1 : sequence[sequence.length - 1]);
+    }
 
-    console.log('Submitting', {
-      title,
-      description,
+    const payload = {
+      titulo: title,
+      enunciado: description,
       grado,
       dificultad,
-      respuestaFiles,
-      respuestaSymbols,
-      additionalFiles,
-    });
+      respuestaImagenes: respuestaUrls,
+      respuestaSimbolos: sequence.map(num => num.toString()),
+      imagenesAdicionales: adicionalesUrls,
+      autorId: 1
+    };
 
-    // TODO: enviar formData a servidor
+    await axios.post('http://localhost:3001/api/crear', payload, { headers: { 'Content-Type': 'application/json' } });
+
+    setTitle('');
+    setDescription('');
+    setRespuestaFiles([]);
+    setRespuestaSymbols([]);
+    setAdditionalFiles([]);
+    alert('¡Pregunta guardada exitosamente!');
   };
 
   return (
@@ -129,18 +162,18 @@ export default function InteractiveQuestionEditor() {
                 onChange={(e) => setGrado(e.target.value)}
                 required
               >
-                <option value="1primaria">1ro de Primaria</option>
-                <option value="2primaria">2do de Primaria</option>
-                <option value="3primaria">3ro de Primaria</option>
-                <option value="4primaria">4to de Primaria</option>
-                <option value="5primaria">5to de Primaria</option>
-                <option value="6primaria">6to de Primaria</option>
-                <option value="1secundaria">1ro de Secundaria</option>
-                <option value="2secundaria">2do de Secundaria</option>
-                <option value="3secundaria">3ro de Secundaria</option>
-                <option value="4secundaria">4to de Secundaria</option>
-                <option value="5secundaria">5to de Secundaria</option>
-                <option value="6secundaria">6to de Secundaria</option>
+                <option value="PRIMARIA_1">1ro de Primaria</option>
+                <option value="PRIMARIA_2">2do de Primaria</option>
+                <option value="PRIMARIA_3">3ro de Primaria</option>
+                <option value="PRIMARIA_4">4to de Primaria</option>
+                <option value="PRIMARIA_5">5to de Primaria</option>
+                <option value="PRIMARIA_6">6to de Primaria</option>
+                <option value="SECUNDARIA_1">1ro de Secundaria</option>
+                <option value="SECUNDARIA_2">2do de Secundaria</option>
+                <option value="SECUNDARIA_3">3ro de Secundaria</option>
+                <option value="SECUNDARIA_4">4to de Secundaria</option>
+                <option value="SECUNDARIA_5">5to de Secundaria</option>
+                <option value="SECUNDARIA_6">6to de Secundaria</option>
               </select>
             </div>
 
@@ -153,13 +186,13 @@ export default function InteractiveQuestionEditor() {
                 onChange={(e) => setDificultad(e.target.value)}
                 required
               >
-                <option value="easy">Fácil</option>
-                <option value="medium">Media</option>
-                <option value="hard">Difícil</option>
+                <option value="FACIL">Fácil</option>
+                <option value="MEDIO">Medio</option>
+                <option value="DIFICIL">Difícil</option>
               </select>
             </div>
 
-            {/* Respuesta (secuencia parcial) */}
+            {/* Respuesta (secuencia parcial) con drag-and-drop nativo */}
             <div className="form-group">
               <label>Respuesta (secuencia parcial)</label>
               <input
@@ -168,42 +201,41 @@ export default function InteractiveQuestionEditor() {
                 multiple
                 onChange={handleRespuestaChange}
               />
-              {respuestaFiles.length > 0 && (
-                <ul className="respuesta-list">
-                  {respuestaFiles.map((file, idx) => (
-                    <React.Fragment key={idx}>
-                      <li className="respuesta-item">
-                        <div className="img-wrapper">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`resp-${idx}`}
-                          />
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() => removeRespuesta(idx)}
-                          >
-                            ✖
-                          </button>
-                        </div>
-                      </li>
-                      {idx < respuestaFiles.length - 1 && (
-                        <li
-                          className="symbol-item"
-                          onClick={() => toggleSymbol(idx)}
+
+              <ul className="respuesta-list">
+                {respuestaFiles.map((file, idx) => (
+                  <React.Fragment key={file.name + idx}>
+                    <li
+                      className="respuesta-item"
+                      draggable
+                      onDragStart={e => onDragStart(e, idx)}
+                      onDragEnter={e => onDragEnter(e, idx)}
+                      onDragEnd={onDragEnd}
+                    >
+                      <div className="img-wrapper">
+                        <img src={URL.createObjectURL(file)} alt={`resp-${idx}`} />
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() => removeRespuesta(idx)}
                         >
-                          {respuestaSymbols[idx]}
-                        </li>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </ul>
-              )}
+                          ✖
+                        </button>
+                      </div>
+                    </li>
+                    {idx < respuestaFiles.length - 1 && (
+                      <li className="symbol-item" onClick={() => toggleSymbol(idx)}>
+                        {respuestaSymbols[idx]}
+                      </li>
+                    )}
+                  </React.Fragment>
+                ))}
+              </ul>
             </div>
 
-            {/* Imágenes adicionales */}
+            {/* Imagen Resultado */}
             <div className="form-group">
-              <label>Imágenes adicionales</label>
+              <label>Imágen Resultado</label>
               <input
                 type="file"
                 accept="image/*"

@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // o "mysql" o "sqlite" según tu base
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  email     String    @unique
+  preguntas Pregunta[]  // Relación 1:N con Pregunta
+}
+
+model Pregunta {
+  id               Int      @id @default(autoincrement())
+  titulo           String
+  enunciado        String
+  grado            GradoEscolar
+  dificultad       Dificultad
+  respuestaImagenes String[] // Secuencia parcial (imágenes en orden)
+  respuestaSimbolos String[] // Símbolos entre las imágenes
+  imagenesAdicionales String[] // URLs o rutas de imágenes
+  autorId          Int
+  autor            Usuario   @relation(fields: [autorId], references: [id])
+  creadoEn         DateTime @default(now())
+  actualizadoEn    DateTime @updatedAt
+}
+
+enum GradoEscolar {
+  PRIMARIA_1
+  PRIMARIA_2
+  PRIMARIA_3
+  PRIMARIA_4
+  PRIMARIA_5
+  PRIMARIA_6
+  SECUNDARIA_1
+  SECUNDARIA_2
+  SECUNDARIA_3
+  SECUNDARIA_4
+  SECUNDARIA_5
+  SECUNDARIA_6
+}
+
+enum Dificultad {
+  FACIL
+  MEDIO
+  DIFICIL
+}

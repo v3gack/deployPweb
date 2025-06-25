@@ -1,219 +1,239 @@
-import React, { useState, useCallback } from "react";
-import { DndProvider, useDrag, useDrop } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import { TouchBackend } from "react-dnd-touch-backend";
-import '../styles/Pregunta.css';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import '../styles/preguntaCastor.css';
 
-const ItemTypes = { PIEZA: "pieza" };
+export default function Pregunta() {
+  const { id } = useParams();
+  const [datos, setDatos] = useState(null);
+  const [slots, setSlots] = useState([]);
+  const [tray, setTray] = useState([]);
+  const [resultado, setResultado] = useState(null);
+  const [mostrarSolucion, setMostrarSolucion] = useState(false);
 
-const Pieza = ({ pieza, origen }) => {
-  const [{ isDragging }, drag] = useDrag({
-    type: ItemTypes.PIEZA,
-    item: { pieza, from: origen },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging()
-    })
-  });
+  // Función para mezclar un arreglo (Fisher-Yates shuffle)
+  const mezclarArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
 
-  return (
+  useEffect(() => {
+    const fetchDatos = async () => {
+      try {
+        const res = await axios.get(`http://localhost:3001/api/obtener/${id}`);
+        const data = res.data;
 
-    <div
-      ref={drag}
-      className="pieza"
-      style={{
-        cursor: 'move',
-        opacity: isDragging ? 0.5 : 1, // Esta opacidad mantiene visible la pieza original
-        zIndex: isDragging ? 100 : 'auto',
-      }}
-    >
-      <img 
-        src={pieza.src} 
-        alt={`pieza-${pieza.id}`} 
-        className="pieza-img" 
-      />
-    </div>
-  );
-};
+        setDatos(data);
 
-const Slot = ({ pieza, index, colocarEnSlot }) => {
-  const [{ isOver, canDrop }, drop] = useDrop({
-    accept: ItemTypes.PIEZA,
-    drop: (item) => colocarEnSlot(item, index),
-    collect: monitor => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop()
-    })
-  });
+        // Crear objetos con id único y url
+        const trayConIds = data.respuestaImagenes.map((url, i) => ({
+          id: `${i}-${Date.now()}-${Math.random()}`,
+          url,
+        }));
 
-  return (
-    <div
-      ref={drop}
-      className="slot"
-      style={{
-        borderColor: isOver ? (canDrop ? "green" : "red") : "#bbb"
-      }}
-    >
-      {pieza && <img src={pieza.src} alt={`slot-${index}`} className="pieza-img" />}
-    </div>
-  );
-};
+        // Mezclar las imágenes para que aparezcan desordenadas en la bandeja
+        const trayMezclado = mezclarArray(trayConIds);
 
-const Pool = ({ pool, devolverAlPool }) => {
-  const [, drop] = useDrop({
-    accept: ItemTypes.PIEZA,
-    drop: (item) => {
-      if (item.from === "slot") {
-        devolverAlPool(item);
+        setTray(trayMezclado);
+        setSlots(new Array(trayConIds.length).fill(null));
+      } catch (err) {
+        console.error('Error al cargar datos:', err);
       }
-    }
-  });
+    };
 
-  return (
-    <div ref={drop} className="pool-wrapper">
-      {pool.map(pieza => (
-        <Pieza key={pieza.id} pieza={pieza} origen="pool" />
-      ))}
-    </div>
-  );
-};
+    fetchDatos();
+  }, [id]);
 
-const Pregunta = () => {
-  const [pool, setPool] = useState([
-    { id: 2, src: "/images/SerpienteP2.png" },
-    { id: 1, src: "/images/SerpienteP1.png" },
-    { id: 4, src: "/images/SerpienteP4.png" },
-    { id: 3, src: "/images/SerpienteP3.png" }
-  ]);
-  const [slots, setSlots] = useState([null, null, null, null]);
-  const [confirmado, setConfirmado] = useState(false);
-  const [resultadoVisible, setResultadoVisible] = useState(false);
-  const [esRespuestaCorrecta, setEsRespuestaCorrecta] = useState(false);
+  const handleDrop = (index, piezaJSON) => {
+    const pieza = JSON.parse(piezaJSON);
+    if (slots[index] !== null) return;
 
-  const colocarEnSlot = useCallback(({ pieza, from }, index) => {
-    setSlots(prev => {
-      const nuevo = [...prev];
-      nuevo[index] = pieza;
-      return nuevo;
+    setSlots((prev) => {
+      const nuevos = [...prev];
+      nuevos[index] = pieza;
+      return nuevos;
     });
 
-    if (from === "pool") {
-      setPool(prev => prev.filter(p => p.id !== pieza.id));
-    } else if (from === "slot") {
-      setSlots(prev => {
-        const nuevo = [...prev];
-        const idx = nuevo.findIndex(p => p?.id === pieza.id);
-        if (idx !== -1) nuevo[idx] = null;
-        return nuevo;
-      });
-    }
-  }, []);
+    setTray((prev) => prev.filter((p) => p.id !== pieza.id));
+  };
 
-  const devolverAlPool = useCallback(({ pieza }) => {
-    setPool(prev => [...prev, pieza]);
-    setSlots(prev => {
-      const nuevo = [...prev];
-      const idx = nuevo.findIndex(p => p?.id === pieza.id);
-      if (idx !== -1) nuevo[idx] = null;
-      return nuevo;
+  const handleReturn = (pieza, index) => {
+    setSlots((prev) => {
+      const nuevos = [...prev];
+      nuevos[index] = null;
+      return nuevos;
     });
-  }, []);
+    setTray((prev) => [...prev, pieza]);
+  };
 
   const verificar = () => {
-    const ordenUsuario = slots.map(p => p?.id ?? 0);
-    const correcto = [1, 2, 3, 4];
-    const esCorrecta = JSON.stringify(ordenUsuario) === JSON.stringify(correcto);
-    
-    setConfirmado(true);
-    setResultadoVisible(true);
-    setEsRespuestaCorrecta(esCorrecta);
+    if (!datos || !datos.respuestaSimbolos || !datos.respuestaImagenes) {
+      alert('La pregunta no tiene datos suficientes para validar.');
+      return;
+    }
+
+    const ordenEsperado = datos.respuestaSimbolos.map((s) => parseInt(s, 10));
+    const esOrdenParcial = (valor) =>
+      ordenEsperado.filter((n) => n === valor).length > 1;
+
+    const respuestaIndices = slots.map((pieza) => {
+      if (!pieza) return -1;
+      return datos.respuestaImagenes.findIndex((url) => url === pieza.url);
+    });
+
+    let esCorrecto = true;
+
+    for (let i = 0; i < ordenEsperado.length; i++) {
+      const actualIndex = respuestaIndices[i];
+
+      if (actualIndex === -1) {
+        esCorrecto = false;
+        break;
+      }
+
+      const valorEsperado = ordenEsperado[i];
+      const valorActual = ordenEsperado[actualIndex];
+
+      if (esOrdenParcial(valorEsperado)) {
+        if (valorActual !== valorEsperado) {
+          esCorrecto = false;
+          break;
+        }
+      } else {
+        if (actualIndex !== i) {
+          esCorrecto = false;
+          break;
+        }
+      }
+    }
+
+    setResultado(esCorrecto ? 'correcto' : 'incorrecto');
+    setMostrarSolucion(true);
   };
 
-  const resetear = () => {
-    // Devolver todas las piezas al pool
-    const todasLasPiezas = [
-      { id: 1, src: "/images/SerpienteP1.png" },
-      { id: 2, src: "/images/SerpienteP2.png" },
-      { id: 3, src: "/images/SerpienteP3.png" },
-      { id: 4, src: "/images/SerpienteP4.png" }
-    ];
-    
-    setPool(todasLasPiezas);
-    setSlots([null, null, null, null]);
-    setConfirmado(false);
-    setResultadoVisible(false);
+  const generarPrimeraSecuenciaCorrecta = () => {
+    const simbolos = datos.respuestaSimbolos.map(Number);
+    const imagenes = datos.respuestaImagenes;
+
+    const grupos = {};
+
+    simbolos.forEach((s, i) => {
+      if (!grupos[s]) grupos[s] = [];
+      grupos[s].push(imagenes[i]);
+    });
+
+    const clavesOrdenadas = Object.keys(grupos).map(Number).sort((a, b) => a - b);
+    return clavesOrdenadas.flatMap((k) => grupos[k]);
   };
 
-  const isTouch =
-    typeof window !== 'undefined' &&
-    ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  const backend = isTouch ? TouchBackend : HTML5Backend;
+  const reintentar = () => {
+    const trayConIds = datos.respuestaImagenes.map((url, i) => ({
+      id: `${i}-${Date.now()}-${Math.random()}`,
+      url,
+    }));
+
+    // Mezclar en reintentar para mayor dificultad
+    const trayMezclado = mezclarArray(trayConIds);
+
+    setTray(trayMezclado);
+    setSlots(new Array(trayConIds.length).fill(null));
+    setResultado(null);
+    setMostrarSolucion(false);
+  };
+
+  if (!datos) return <p>Cargando...</p>;
 
   return (
-    <DndProvider backend={backend} options={{ 
-      ...(isTouch ? { enableMouseEvents: true } : {}), 
-      // Habilita la vista previa del arrastre para ambos backends
-      enablePreview: true, 
-    }}>
-      <div className="pregunta-container">
-        <h1 className="titulo-pregunta">Pregunta 1</h1>
-        <h2 className="pregunta-title">
-          Ordena las piezas para reconstruir la figura:
-        </h2>
+    <div className="contenedor-principal">
+      <h1>{datos.titulo}</h1>
+      <p className="enunciado">{datos.enunciado}</p>
 
-        <div className="responsive-wrapper">
-          <div className="slots-wrapper">
-            {slots.map((pieza, i) => (
-              <Slot
-                key={i}
-                pieza={pieza}
-                index={i}
-                colocarEnSlot={confirmado ? () => {} : colocarEnSlot}
-              />
+      <div className="slots">
+        {slots.map((pieza, i) => (
+          <React.Fragment key={i}>
+            <div
+              className="slot"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => handleDrop(i, e.dataTransfer.getData('pieza'))}
+            >
+              {pieza && (
+                <img
+                  src={pieza.url}
+                  alt={`pieza-${i}`}
+                  draggable
+                  onDragStart={(e) =>
+                    e.dataTransfer.setData('pieza', JSON.stringify(pieza))
+                  }
+                  onDoubleClick={() => handleReturn(pieza, i)}
+                />
+              )}
+            </div>
+            {i < slots.length - 1 && <span className="flecha">→</span>}
+          </React.Fragment>
+        ))}
+        <span className="igual">=</span>
+        <div className="slot solucion">
+          <img src={datos.imagenesAdicionales[0]} alt="resultado final" />
+        </div>
+      </div>
+
+      <div className="bandeja">
+        {tray.map((pieza) => (
+          <img
+            key={pieza.id}
+            src={pieza.url}
+            alt={`tray-${pieza.id}`}
+            draggable
+            onDragStart={(e) =>
+              e.dataTransfer.setData('pieza', JSON.stringify(pieza))
+            }
+          />
+        ))}
+      </div>
+
+      <div className="botones">
+        <button className="verificar" onClick={verificar}>
+          Verificar
+        </button>
+        <button className="reintentar" onClick={reintentar}>
+          Reintentar
+        </button>
+      </div>
+
+      {resultado === 'correcto' && (
+        <div className="mensaje-resultado correcto">¡Correcto!</div>
+      )}
+      {resultado === 'incorrecto' && (
+        <div className="mensaje-resultado incorrecto">
+          Incorrecto. Intenta de nuevo.
+        </div>
+      )}
+
+      {mostrarSolucion && resultado === 'incorrecto' && (
+        <div className="solucion-correcta">
+          <h3>secuencia válida:</h3>
+          <div className="slots">
+            {generarPrimeraSecuenciaCorrecta().map((pieza, i) => (
+              <React.Fragment key={i}>
+                <div className="slot">
+                  <img src={pieza} alt={`solucion-${i}`} />
+                </div>
+                {i < datos.respuestaImagenes.length - 1 && (
+                  <span className="flecha">→</span>
+                )}
+              </React.Fragment>
             ))}
-          </div>
-
-          <Pool pool={pool} devolverAlPool={confirmado ? () => {} : devolverAlPool} />
-        </div>
-
-        <div className="boton-wrapper">
-          {!confirmado ? (
-            <button
-              onClick={verificar}
-              className="confirm-btn"
-              disabled={slots.includes(null)}
-            >
-              Confirmar respuesta
-            </button>
-          ) : (
-            <button
-              onClick={resetear}
-              className="reset-btn"
-            >
-              Intentar de nuevo
-            </button>
-          )}
-        </div>
-
-        {resultadoVisible && (
-          <div className={`resultado-container ${esRespuestaCorrecta ? 'correcto' : 'incorrecto'}`}>
-            <h3>{esRespuestaCorrecta ? "¡Correcto!" : "Incorrecto, inténtalo de nuevo."}</h3>
-            <div className="respuesta-correcta">
-              <p>Respuesta correcta:</p>
-              <div className="imagen-completa">
-                <img src="/images/SerpienteCompleto.png" alt="Serpiente completa" />
-              </div>
-              <div className="piezas-ordenadas">
-                <img src="/images/SerpienteP1.png" alt="Pieza 1" />
-                <img src="/images/SerpienteP2.png" alt="Pieza 2" />
-                <img src="/images/SerpienteP3.png" alt="Pieza 3" />
-                <img src="/images/SerpienteP4.png" alt="Pieza 4" />
-              </div>
+            <span className="igual">=</span>
+            <div className="slot solucion">
+              <img src={datos.imagenesAdicionales[0]} alt="resultado final" />
             </div>
           </div>
-        )}
-      </div>
-    </DndProvider>
+        </div>
+      )}
+    </div>
   );
-};
-
-export default Pregunta;
+}

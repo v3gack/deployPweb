@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Seleccion from './components/seleccion';
 import Drag from './components/DragDrop';
-import Question from './components/Pregunta';
+import Pregunta from './components/Pregunta';
 import Login from './components/Registros/Login';
 import RegistroUsuario from './components/Registros/RegistroUsuario';
 import RellenarEspacios from './components/RellenarEspacios';
@@ -33,7 +33,7 @@ function App() {
           <Route path="/inicio" element={<Inicio />} />
           <Route path="/seleccion" element={<Seleccion userRole={userRole} />} />
           <Route path="/Drag" element={<Drag />} />
-          <Route path="/question" element={<Question />} />
+          <Route path="/pregunta/:id" element={<Pregunta />} />
           <Route path="/Rellenar" element={<RellenarEspacios />} />
           <Route path="/Castor" element={<Castor />} />
           <Route path="/Puzzle" element={<PuzzleRotate />} />

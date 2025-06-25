@@ -36,19 +36,43 @@ export default function InteractiveQuestionEditor() {
   const cargarPreguntaExistente = async (id) => {
     try {
       const response = await axios.get(`http://localhost:3001/api/obtener/${id}`);
-      const { titulo, enunciado, grado, dificultad } = response.data;
-      
+      const {
+        titulo,
+        enunciado,
+        grado,
+        dificultad,
+        respuestaImagenes,
+        respuestaSimbolos,
+        imagenesAdicionales
+      } = response.data;
+
       setTitle(titulo);
       setDescription(enunciado);
       setGrado(grado);
       setDificultad(dificultad);
-      
-      // Aquí podrías cargar las imágenes existentes si las tuvieras
+
+      // Cargar las imágenes como objetos falsos con .name y .url
+      setRespuestaFiles(
+        respuestaImagenes.map((url) => ({ url, name: url.split('/').pop() }))
+      );
+
+      setRespuestaSymbols(
+        respuestaSimbolos?.slice(1).map((num, i) =>
+          parseInt(num) > parseInt(respuestaSimbolos[i]) ? '<' : '='
+        )
+      );
+
+      setAdditionalFiles(
+        imagenesAdicionales.map((url) => ({ url, name: url.split('/').pop() }))
+      );
+
     } catch (error) {
       console.error('Error al cargar pregunta:', error);
       alert('No se pudo cargar la pregunta para editar');
     }
   };
+
+
   // Ajusta symbols cuando cambien archivos
   useEffect(() => {
     const n = respuestaFiles.length;
@@ -61,12 +85,6 @@ export default function InteractiveQuestionEditor() {
       return Array.from({length: len}, (_, i) => oldSyms[i] ?? '<');
     });
   }, [respuestaFiles]);
-
-  const handleRespuestaChange = (e) => {
-    const files = Array.from(e.target.files);
-    e.target.value = null;
-    setRespuestaFiles(files);
-  };
 
   const removeRespuesta = (idx) => {
     setRespuestaFiles(files => files.filter((_, i) => i !== idx));
@@ -121,10 +139,10 @@ export default function InteractiveQuestionEditor() {
     if (respuestaFiles.length === 0) throw new Error('Debe agregar al menos una imagen de respuesta');
 
     const respuestaUrls = respuestaFiles.map(file =>
-      `C:/Users/MIGUEL HUARANCA/Documents/PrograWeb/Proyecto/Programacion-Web/programacion-web/public/images${file.name}`
+      `http://localhost:3000/images/${file.name}`
     );
     const adicionalesUrls = additionalFiles.map(file =>
-      `C:/Users/MIGUEL HUARANCA/Documents/PrograWeb/Proyecto/Programacion-Web/programacion-web/public/images${file.name}`
+      `http://localhost:3000/images/${file.name}`
     );
 
     let sequence = [1];
@@ -243,8 +261,11 @@ export default function InteractiveQuestionEditor() {
               <input
                 type="file"
                 accept="image/*"
-                multiple
-                onChange={handleRespuestaChange}
+                onChange={(e) => {
+                  const files = Array.from(e.target.files);
+                  e.target.value = null; // Para permitir seleccionar la misma imagen nuevamente si se desea
+                  setRespuestaFiles(prev => [...prev, ...files]);
+                }}
               />
 
               <ul className="respuesta-list">
@@ -258,7 +279,14 @@ export default function InteractiveQuestionEditor() {
                       onDragEnd={onDragEnd}
                     >
                       <div className="img-wrapper">
-                        <img src={URL.createObjectURL(file)} alt={`resp-${idx}`} />
+                        <img
+                          src={
+                            file.url
+                              ? file.url
+                              : URL.createObjectURL(file)
+                          }
+                          alt={`resp-${idx}`}
+                        />
                         <button
                           type="button"
                           className="remove-btn"
@@ -293,7 +321,11 @@ export default function InteractiveQuestionEditor() {
                     <li key={idx} className="additional-item">
                       <div className="img-wrapper">
                         <img
-                          src={URL.createObjectURL(file)}
+                          src={
+                            file.url
+                              ? file.url
+                              : URL.createObjectURL(file)
+                          }
                           alt={`add-${idx}`}
                         />
                         <button

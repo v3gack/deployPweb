@@ -8,13 +8,11 @@ const Inicio = () => {
   const [preguntas, setPreguntas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Obtener preguntas del usuario ID 1 (temporal)
   useEffect(() => {
     const fetchPreguntas = async () => {
       try {
         const response = await axios.get('http://localhost:3001/api/obtener');
-        // Filtrar por autorId = 1 (hasta implementar login)*****************************************
-        const preguntasUsuario = response.data.filter(pregunta => pregunta.autorId === 1);
+        const preguntasUsuario = response.data.filter(p => p.autorId === 1);
         setPreguntas(preguntasUsuario);
       } catch (error) {
         console.error('Error al cargar preguntas:', error);
@@ -26,9 +24,18 @@ const Inicio = () => {
     fetchPreguntas();
   }, []);
 
-  // Navegar a la vista de edición de pregunta
   const handleEditarPregunta = (id) => {
     navigate(`/seleccion?editar=${id}`); 
+  };
+
+  const handleEliminarPregunta = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3001/api/eliminar/${id}`); // Ajusta URL según backend
+      setPreguntas(preguntas.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Error al eliminar pregunta:', error);
+      alert('No se pudo eliminar la pregunta.');
+    }
   };
 
   return (
@@ -53,14 +60,107 @@ const Inicio = () => {
                 <li
                   key={pregunta.id}
                   className="pregunta-item"
-                  onClick={() => handleEditarPregunta(pregunta.id)}
+                  style={{
+                    position: 'relative',
+                    paddingRight: '2.5rem',
+                    marginBottom: '1rem',
+                    border: '1px solid #ccc',
+                    borderRadius: '6px',
+                    padding: '0.5rem 1rem',
+                  }}
                 >
-                  <div className="pregunta-titulo">{pregunta.titulo}</div>
-                  <div className="pregunta-metadata">
-                    <span>Grado: {pregunta.grado.replace('_', ' ')}</span>
-                    <span>Dificultad: {pregunta.dificultad.toLowerCase()}</span>
+                  {/* Botón eliminar (X) */}
+                  <button
+                    onClick={() => handleEliminarPregunta(pregunta.id)}
+                    style={{
+                      position: 'absolute',
+                      top: '0px',
+                      right: '0px',
+                      border: 'none',
+                      backgroundColor: '#e74c3c',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      lineHeight: '1',
+                      padding: 0,
+                      width: '17px',
+                      height: '17px',
+                      borderRadius: '50%',
+                      boxShadow: '0 0 4px rgba(0,0,0,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 10,
+                    }}
+                    aria-label="Eliminar pregunta"
+                    title="Eliminar pregunta"
+                  >
+                    ×
+                  </button>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <div>
+                      <div className="pregunta-titulo">{pregunta.titulo}</div>
+                      <div className="pregunta-metadata">
+                        <span>Grado: {pregunta.grado.replace('_', ' ')}</span>
+                        <span style={{ marginLeft: '1rem' }}>
+                          Dificultad: {pregunta.dificultad.toLowerCase()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Contenedor de botones */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '4px',           // espacio pequeño entre botones
+                        justifyContent: 'flex-end',
+                        minWidth: '120px',    // espacio fijo para que estén siempre alineados a la derecha
+                      }}
+                    >
+                      <button
+                        onClick={() => navigate(`/pregunta/${pregunta.id}`)}
+                        className="btn-editar"
+                        style={{
+                          marginTop: 0,
+                          padding: '4px 8px',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          width: 'auto',
+                          minWidth: 'auto',
+                          backgroundColor: '#007bff',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                        }}
+                      >
+                        Ver
+                      </button>
+                      <button
+                        onClick={() => handleEditarPregunta(pregunta.id)}
+                        className="btn-editar"
+                        style={{
+                          marginTop: 0,
+                          padding: '4px 8px',
+                          fontSize: '14px',
+                          cursor: 'pointer',
+                          width: 'auto',
+                          minWidth: 'auto',
+                        }}
+                      >
+                        Editar
+                      </button>
+                    </div>
                   </div>
                 </li>
+
               ))}
             </ul>
           ) : (
@@ -73,7 +173,6 @@ const Inicio = () => {
           localStorage.removeItem('usuario');
           navigate('/login');
         }}
-        //className="logout-btn"
         style={{ padding: '10px 20px', fontSize: '16px', width: 'auto', marginTop: '2rem' }}
       >
         Cerrar sesión

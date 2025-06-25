@@ -1,15 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/inicio.css';
-
-const preguntasUsuario = [
-  { id: 1, nombre: 'Ordenar la serpiente', ruta: '/question' },
-  { id: 2, nombre: 'Armar el Sandwich', ruta: '/castor' },
-  // ...aquí irán las preguntas reales del usuario
-];
 
 const Inicio = () => {
   const navigate = useNavigate();
+  const [preguntas, setPreguntas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Obtener preguntas del usuario ID 1 (temporal)
+  useEffect(() => {
+    const fetchPreguntas = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/obtener');
+        // Filtrar por autorId = 1 (hasta implementar login)*****************************************
+        const preguntasUsuario = response.data.filter(pregunta => pregunta.autorId === 1);
+        setPreguntas(preguntasUsuario);
+      } catch (error) {
+        console.error('Error al cargar preguntas:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPreguntas();
+  }, []);
+
+  // Navegar a la vista de edición de pregunta
+  const handleEditarPregunta = (id) => {
+    navigate(`/seleccion?editar=${id}`); 
+  };
 
   return (
     <div className="inicio-container">
@@ -25,16 +45,21 @@ const Inicio = () => {
         </div>
         <div className="inicio-right">
           <h3>Tus preguntas realizadas</h3>
-          {preguntasUsuario.length > 0 ? (
+          {loading ? (
+            <p>Cargando...</p>
+          ) : preguntas.length > 0 ? (
             <ul className="inicio-preguntas-list">
-              {preguntasUsuario.map(pregunta => (
+              {preguntas.map(pregunta => (
                 <li
                   key={pregunta.id}
-                  style={{ cursor: 'pointer', color: '#007bff', textDecoration: 'underline' }}
-                  onClick={() => navigate(pregunta.ruta)}
-                  tabIndex={0}
+                  className="pregunta-item"
+                  onClick={() => handleEditarPregunta(pregunta.id)}
                 >
-                  {pregunta.nombre}
+                  <div className="pregunta-titulo">{pregunta.titulo}</div>
+                  <div className="pregunta-metadata">
+                    <span>Grado: {pregunta.grado.replace('_', ' ')}</span>
+                    <span>Dificultad: {pregunta.dificultad.toLowerCase()}</span>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -48,6 +73,7 @@ const Inicio = () => {
           localStorage.removeItem('usuario');
           navigate('/login');
         }}
+        //className="logout-btn"
         style={{ padding: '10px 20px', fontSize: '16px', width: 'auto', marginTop: '2rem' }}
       >
         Cerrar sesión

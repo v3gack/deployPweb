@@ -51,3 +51,13 @@ export const obtenerPreguntas = async (): Promise<Pregunta[]> => {
     },
   });
 };
+
+// Añade esta función al final del archivo pregunta.service.ts
+export const obtenerPreguntaPorId = async (id: number): Promise<Pregunta | null> => {
+  return prisma.pregunta.findUnique({
+    where: { id },
+    include: {
+      autor: true, // Incluye la relación con el autor si es necesario
+    },
+  });
+};

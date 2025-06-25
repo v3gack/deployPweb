@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { useLocation, useNavigate } from 'react-router-dom';
 import '../styles/QuestionEditor.css';
 
 export default function InteractiveQuestionEditor() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [preguntaId, setPreguntaId] = useState(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [respuestaFiles, setRespuestaFiles] = useState([]);
@@ -15,6 +20,35 @@ export default function InteractiveQuestionEditor() {
   const dragItem = useRef();
   const dragOverItem = useRef();
 
+  // 1. Detectar modo edición al cargar
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('editar');
+    
+    if (id) {
+      setIsEditing(true);
+      setPreguntaId(id);
+      cargarPreguntaExistente(id);
+    }
+  }, [location]);
+
+  // 2. Cargar datos de pregunta existente
+  const cargarPreguntaExistente = async (id) => {
+    try {
+      const response = await axios.get(`http://localhost:3001/api/obtener/${id}`);
+      const { titulo, enunciado, grado, dificultad } = response.data;
+      
+      setTitle(titulo);
+      setDescription(enunciado);
+      setGrado(grado);
+      setDificultad(dificultad);
+      
+      // Aquí podrías cargar las imágenes existentes si las tuvieras
+    } catch (error) {
+      console.error('Error al cargar pregunta:', error);
+      alert('No se pudo cargar la pregunta para editar');
+    }
+  };
   // Ajusta symbols cuando cambien archivos
   useEffect(() => {
     const n = respuestaFiles.length;
@@ -82,14 +116,15 @@ export default function InteractiveQuestionEditor() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    try{
     if (!title.trim()) throw new Error('El título es requerido');
     if (respuestaFiles.length === 0) throw new Error('Debe agregar al menos una imagen de respuesta');
 
     const respuestaUrls = respuestaFiles.map(file =>
-      `C:/Users/josue/Documents/PROGRA WEB/Programacion-Web/programacion-web/public/images/${file.name}`
+      `C:/Users/MIGUEL HUARANCA/Documents/PrograWeb/Proyecto/Programacion-Web/programacion-web/public/images${file.name}`
     );
     const adicionalesUrls = additionalFiles.map(file =>
-      `C:/Users/josue/Documents/PROGRA WEB/Programacion-Web/programacion-web/public/images/${file.name}`
+      `C:/Users/MIGUEL HUARANCA/Documents/PrograWeb/Proyecto/Programacion-Web/programacion-web/public/images${file.name}`
     );
 
     let sequence = [1];
@@ -107,20 +142,30 @@ export default function InteractiveQuestionEditor() {
       imagenesAdicionales: adicionalesUrls,
       autorId: 1
     };
+      if (isEditing) {
+        await axios.put(`http://localhost:3001/api/editar/${preguntaId}`, payload, { 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+        alert('¡Pregunta actualizada exitosamente!');
+      } else {
+        await axios.post('http://localhost:3001/api/crear', payload, { 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+        alert('¡Pregunta guardada exitosamente!');
+      }
 
-    await axios.post('http://localhost:3001/api/crear', payload, { headers: { 'Content-Type': 'application/json' } });
-
-    setTitle('');
-    setDescription('');
-    setRespuestaFiles([]);
-    setRespuestaSymbols([]);
-    setAdditionalFiles([]);
-    alert('¡Pregunta guardada exitosamente!');
+      navigate('/inicio');
+      
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      alert(error.message || 'Error al guardar la pregunta');
+    }
   };
 
   return (
     <div className="editor-container">
-      <h1 className="page-title">Editor de Pregunta</h1>
+      <h1 className="page-title">{isEditing ? 'Editar Pregunta' : 'Nueva Pregunta'}
+      </h1>
       <div className="editor-content">
         <aside className="file-info">
           <h2>Nuevo Archivo</h2>
@@ -267,7 +312,7 @@ export default function InteractiveQuestionEditor() {
 
             {/* Botón Guardar */}
             <button type="submit" className="submit-button">
-              Guardar Pregunta
+              {isEditing ? 'Actualizar Pregunta' : 'Guardar Pregunta'}
             </button>
           </form>
         </div>

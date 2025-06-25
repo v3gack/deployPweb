@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { crearPregunta, obtenerPreguntas, editarPregunta, eliminarPregunta } from '../services/pregunta.service';
+import { crearPregunta, obtenerPreguntas, editarPregunta, eliminarPregunta,obtenerPreguntaPorId } from '../services/pregunta.service';
 
 export const crearPreguntaController = async (req: Request, res: Response) => {
   try {
@@ -40,5 +40,31 @@ export const obtenerPreguntasController = async (_req: Request, res: Response) =
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error al obtener las preguntas' });
+  }
+};
+
+export const obtenerPreguntaPorIdController = async (
+  req: Request<{ id: string }>, // Especifica que el parámetro es un string
+  res: Response
+): Promise<void> => { // Cambia el tipo de retorno a void
+  try {
+    const id = Number(req.params.id);
+    
+    if (isNaN(id)) {
+      res.status(400).json({ error: 'ID de pregunta no válido' });
+      return;
+    }
+
+    const pregunta = await obtenerPreguntaPorId(id);
+    
+    if (!pregunta) {
+      res.status(404).json({ error: 'Pregunta no encontrada' });
+      return;
+    }
+    
+    res.json(pregunta);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener la pregunta' });
   }
 };

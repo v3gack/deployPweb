@@ -11,6 +11,7 @@ model Usuario {
   id        Int       @id @default(autoincrement())
   nombre    String
   email     String    @unique
+  password  String?
   preguntas Pregunta[]  // Relación 1:N con Pregunta
 }
 

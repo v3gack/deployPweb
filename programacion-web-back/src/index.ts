@@ -20,9 +20,13 @@ app.use(cors({
 app.use(express.json());
 
 // Configuración de la sesión
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  throw new Error('La variable de entorno SESSION_SECRET no está definida');
+}
 app.use(
   session({
-    secret: process.env.SESSION_SECRET || '123567904823072003RiN',
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {

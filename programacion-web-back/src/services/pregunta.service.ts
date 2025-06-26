@@ -1,7 +1,8 @@
 import prisma from '../../prisma/client';
 import { Pregunta, Dificultad, GradoEscolar } from '@prisma/client';
 
-export const crearPregunta = async (data: {
+// Tipo para creación SIN autorId (lo añadimos manualmente)
+type CrearPreguntaInput = {
   titulo: string;
   enunciado: string;
   grado: GradoEscolar;
@@ -9,25 +10,27 @@ export const crearPregunta = async (data: {
   respuestaImagenes: string[];
   respuestaSimbolos: string[];
   imagenesAdicionales: string[];
-  autorId: number;
-}) => {
+};
+
+// El servicio crea la pregunta recibiendo los datos sin autorId + el autorId por separado
+export const crearPregunta = async (
+  data: CrearPreguntaInput,
+  autorId: number
+): Promise<Pregunta> => {
   return prisma.pregunta.create({
-    data,
+    data: {
+      ...data,
+      autorId,
+    },
   });
 };
 
+// Tipo para editar pregunta SIN autorId
+type EditarPreguntaInput = Partial<Omit<CrearPreguntaInput, 'autorId'>>;
+
 export const editarPregunta = async (
   id: number,
-  data: {
-    titulo?: string;
-    enunciado?: string;
-    grado?: GradoEscolar;
-    dificultad?: Dificultad;
-    respuestaImagenes?: string[];
-    respuestaSimbolos?: string[];
-    imagenesAdicionales?: string[];
-    autorId?: number;
-  }
+  data: EditarPreguntaInput
 ): Promise<Pregunta | null> => {
   return prisma.pregunta.update({
     where: { id },
@@ -41,6 +44,19 @@ export const eliminarPregunta = async (id: number): Promise<Pregunta | null> => 
   });
 };
 
+// Solo devuelve preguntas del usuario autenticado
+export const obtenerPreguntasDelUsuario = async (
+  autorId: number
+): Promise<Pregunta[]> => {
+  return prisma.pregunta.findMany({
+    where: { autorId },
+    orderBy: {
+      creadoEn: 'desc',
+    },
+  });
+};
+
+// Ya no se usa directamente en el controlador
 export const obtenerPreguntas = async (): Promise<Pregunta[]> => {
   return prisma.pregunta.findMany({
     include: {
@@ -52,12 +68,11 @@ export const obtenerPreguntas = async (): Promise<Pregunta[]> => {
   });
 };
 
-// Añade esta función al final del archivo pregunta.service.ts
 export const obtenerPreguntaPorId = async (id: number): Promise<Pregunta | null> => {
   return prisma.pregunta.findUnique({
     where: { id },
     include: {
-      autor: true, // Incluye la relación con el autor si es necesario
+      autor: true,
     },
   });
 };

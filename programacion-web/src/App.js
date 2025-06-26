@@ -9,16 +9,23 @@ import RellenarEspacios from './components/RellenarEspacios';
 import Castor from './components/preguntaCastor';
 import Layout from './components/Layout';
 import Inicio from './components/Inicio';
-import PrivateRoute from './components/PrivateRoute'; // ← nuevo
+import PrivateRoute from './components/PrivateRoute'; // suponiendo que valida sesión
 import PuzzleRotate from './components/PuzzleRotate';
 
 function App() {
   const [userRole, setUserRole] = useState('professor');
 
+  const isLoggedIn = () => {
+    return !!localStorage.getItem('usuario');
+  };
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route
+          path="/"
+          element={isLoggedIn() ? <Navigate to="/inicio" /> : <Navigate to="/login" />}
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/registroUsuario" element={<RegistroUsuario />} />
 

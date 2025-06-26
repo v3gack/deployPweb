@@ -1,0 +1,19 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3rem 2rem; /* más alargado */
+  background-color: #1b263b; /* azul oscuro */
+  color: #ffffff;
+  border-bottom: 3px solid #1abc9c;
+}
+
+.navbar-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.navbar-user-info {
+  position: relative;
+}

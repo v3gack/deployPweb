@@ -35,7 +35,10 @@ export default function InteractiveQuestionEditor() {
   // 2. Cargar datos de pregunta existente
   const cargarPreguntaExistente = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/obtener/${id}`);
+      const response = await axios.get(`http://localhost:3001/api/pregunta/obtener/${id}`, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true, // Asegura que se envíen las cookies de sesión
+      });
       const {
         titulo,
         enunciado,
@@ -158,16 +161,17 @@ export default function InteractiveQuestionEditor() {
       respuestaImagenes: respuestaUrls,
       respuestaSimbolos: sequence.map(num => num.toString()),
       imagenesAdicionales: adicionalesUrls,
-      autorId: 1
     };
       if (isEditing) {
-        await axios.put(`http://localhost:3001/api/editar/${preguntaId}`, payload, { 
-          headers: { 'Content-Type': 'application/json' } 
+        await axios.put(`http://localhost:3001/api/pregunta/editar/${preguntaId}`, payload, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
         });
         alert('¡Pregunta actualizada exitosamente!');
       } else {
-        await axios.post('http://localhost:3001/api/crear', payload, { 
-          headers: { 'Content-Type': 'application/json' } 
+        await axios.post('http://localhost:3001/api/pregunta/crear', payload, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
         });
         alert('¡Pregunta guardada exitosamente!');
       }

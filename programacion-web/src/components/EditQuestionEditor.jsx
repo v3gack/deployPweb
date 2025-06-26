@@ -57,7 +57,7 @@ export default function EditQuestionEditor() {
     };
 
     try {
-      await axios.put(`http://localhost:3001/api/editar/${id}`, payload);
+      await axios.put(`http://localhost:3001/api/pregunta/editar/${id}`, payload);
       alert('¡Pregunta actualizada exitosamente!');
       navigate('/inicio');
     } catch (error) {

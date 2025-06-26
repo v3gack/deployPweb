@@ -1,0 +1,24 @@
+/* src/styles/usuarioInfo.css */
+
+.user-info-container {
+  position: relative;
+  display: inline-block;
+}
+
+.user-icon {
+  cursor: pointer;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  background-color: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 1rem;
+  border-radius: 6px;
+  z-index: 9999;
+  min-width: 220px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}

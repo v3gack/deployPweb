@@ -8,33 +8,51 @@ const Inicio = () => {
   const [preguntas, setPreguntas] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Cargar preguntas al iniciar
   useEffect(() => {
     const fetchPreguntas = async () => {
       try {
-        const response = await axios.get('http://localhost:3001/api/obtener');
-        const preguntasUsuario = response.data.filter(p => p.autorId === 1);
-        setPreguntas(preguntasUsuario);
+        const response = await axios.get('http://localhost:3001/api/pregunta/obtener', {
+          withCredentials: true, // IMPORTANTE para enviar cookies y mantener sesión
+        });
+        setPreguntas(response.data); // backend filtra por usuario logueado
       } catch (error) {
         console.error('Error al cargar preguntas:', error);
+        alert('No se pudo cargar las preguntas. ¿Estás logueado?');
+        navigate('/login');
       } finally {
         setLoading(false);
       }
     };
 
     fetchPreguntas();
-  }, []);
+  }, [navigate]);
 
   const handleEditarPregunta = (id) => {
-    navigate(`/seleccion?editar=${id}`); 
+    navigate(`/seleccion?editar=${id}`);
   };
 
   const handleEliminarPregunta = async (id) => {
     try {
-      await axios.delete(`http://localhost:3001/api/eliminar/${id}`); // Ajusta URL según backend
-      setPreguntas(preguntas.filter(p => p.id !== id));
+      await axios.delete(`http://localhost:3001/api/pregunta/eliminar/${id}`, {
+        withCredentials: true,
+      });
+      setPreguntas((prev) => prev.filter((p) => p.id !== id));
     } catch (error) {
       console.error('Error al eliminar pregunta:', error);
       alert('No se pudo eliminar la pregunta.');
+    }
+  };
+
+  // Nuevo: Logout real que llama a backend para destruir sesión
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:3001/api/usuario/logout', {}, { withCredentials: true });
+      localStorage.removeItem('usuario'); // opcional, si usas localStorage para algo
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      alert('Error al cerrar sesión. Intenta de nuevo.');
     }
   };
 
@@ -43,10 +61,7 @@ const Inicio = () => {
       <div className="inicio-title">Bienvenido/a al Editor de Preguntas</div>
       <div className="inicio-main">
         <div className="inicio-left">
-          <button
-            className="inicio-new-btn"
-            onClick={() => navigate('/seleccion')}
-          >
+          <button className="inicio-new-btn" onClick={() => navigate('/seleccion')}>
             Crear nueva pregunta
           </button>
         </div>
@@ -56,7 +71,7 @@ const Inicio = () => {
             <p>Cargando...</p>
           ) : preguntas.length > 0 ? (
             <ul className="inicio-preguntas-list">
-              {preguntas.map(pregunta => (
+              {preguntas.map((pregunta) => (
                 <li
                   key={pregunta.id}
                   className="pregunta-item"
@@ -74,15 +89,15 @@ const Inicio = () => {
                     onClick={() => handleEliminarPregunta(pregunta.id)}
                     style={{
                       position: 'absolute',
-                      top: '0px',
-                      right: '0px',
+                      top: 0,
+                      right: 0,
                       border: 'none',
                       backgroundColor: '#e74c3c',
                       color: 'white',
                       fontWeight: 'bold',
                       fontSize: '16px',
                       cursor: 'pointer',
-                      lineHeight: '1',
+                      lineHeight: 1,
                       padding: 0,
                       width: '17px',
                       height: '17px',
@@ -120,9 +135,9 @@ const Inicio = () => {
                     <div
                       style={{
                         display: 'flex',
-                        gap: '4px',           // espacio pequeño entre botones
+                        gap: '4px',
                         justifyContent: 'flex-end',
-                        minWidth: '120px',    // espacio fijo para que estén siempre alineados a la derecha
+                        minWidth: '120px',
                       }}
                     >
                       <button
@@ -133,8 +148,6 @@ const Inicio = () => {
                           padding: '4px 8px',
                           fontSize: '14px',
                           cursor: 'pointer',
-                          width: 'auto',
-                          minWidth: 'auto',
                           backgroundColor: '#007bff',
                           color: 'white',
                           border: 'none',
@@ -151,8 +164,6 @@ const Inicio = () => {
                           padding: '4px 8px',
                           fontSize: '14px',
                           cursor: 'pointer',
-                          width: 'auto',
-                          minWidth: 'auto',
                         }}
                       >
                         Editar
@@ -160,7 +171,6 @@ const Inicio = () => {
                     </div>
                   </div>
                 </li>
-
               ))}
             </ul>
           ) : (
@@ -169,11 +179,8 @@ const Inicio = () => {
         </div>
       </div>
       <button
-        onClick={() => {
-          localStorage.removeItem('usuario');
-          navigate('/login');
-        }}
-        style={{ padding: '10px 20px', fontSize: '16px', width: 'auto', marginTop: '2rem' }}
+        onClick={handleLogout}
+        style={{ padding: '10px 20px', fontSize: '16px', marginTop: '2rem', width: 'auto' }}
       >
         Cerrar sesión
       </button>

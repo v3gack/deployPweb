@@ -24,7 +24,10 @@ export default function Pregunta() {
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/api/obtener/${id}`);
+        const res = await axios.get(`http://localhost:3001/api/pregunta/obtener/${id}`, {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true, // Asegura que se envíen las cookies de sesión
+        });
         const data = res.data;
 
         setDatos(data);

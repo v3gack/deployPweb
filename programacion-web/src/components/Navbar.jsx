@@ -1,13 +1,13 @@
 import React from 'react';
+import UserInfoMenu from './usuarioInfo';
+import '../styles/navbar.css'; // Asegúrate de que esta ruta sea correcta
 
-const Navbar = ({ userRole }) => {
+const Navbar = () => {
   return (
     <nav className="navbar">
-      <h1>Editor de Preguntas Interactivas pe</h1>
-      <div className="user-info">
-        <span className="user-role">{userRole === 'professor' ? 'Profesor' : 'Administrador'}</span>
-        <span className="Puntos">{'Puntos'}</span>
-
+      <h1 className="navbar-title">Sistema de Gestión de Preguntas</h1>
+      <div className="navbar-user-info">
+        <UserInfoMenu />
       </div>
     </nav>
   );

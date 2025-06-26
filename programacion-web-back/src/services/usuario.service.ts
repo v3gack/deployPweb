@@ -1,10 +1,12 @@
 import prisma from '../../prisma/client';
+import type { Rol } from '@prisma/client';  
 import bcrypt from 'bcrypt';
 
 export const registrarUsuario = async (data: {
   nombre: string;
   email: string;
   password: string;
+  rol: Rol;
 }) => {
   const hash = await bcrypt.hash(data.password, 10);
   return prisma.usuario.create({
@@ -12,6 +14,7 @@ export const registrarUsuario = async (data: {
       nombre: data.nombre,
       email: data.email,
       password: hash,
+      rol: data.rol,
     },
   });
 };

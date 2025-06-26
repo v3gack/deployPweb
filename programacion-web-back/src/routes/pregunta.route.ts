@@ -6,13 +6,14 @@ import {
   editarPreguntaController,
   eliminarPreguntaController,
 } from '../controllers/pregunta.controller';
+import { verificarSesion } from '../middlewares/verificarSesion';
 
 const router = Router();
-router.get('/obtener/:id', obtenerPreguntaPorIdController);
-router.get('/obtener', obtenerPreguntasController);
 
+router.get('/obtener', verificarSesion, obtenerPreguntasController);
+router.get('/obtener/:id', verificarSesion, obtenerPreguntaPorIdController);
+router.post('/crear', verificarSesion, crearPreguntaController);
+router.put('/editar/:id', verificarSesion, editarPreguntaController);
+router.delete('/eliminar/:id', verificarSesion, eliminarPreguntaController);
 
-router.post('/crear', crearPreguntaController);
-router.put('/editar/:id', editarPreguntaController);
-router.delete('/eliminar/:id', eliminarPreguntaController);
 export default router;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../../styles/App.css';
 
 
@@ -32,19 +33,13 @@ const RegistroUsuario = () => {
     }
 
     try {
-      //porsiacaso en el copilot esta la logica de lo nuevo, lo deabjo es del deepsek
-      // Aquí iría la llamada a tu API para registrar el usuario
-      // Ejemplo:
-      // const response = await fetch('/api/registro', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // });
-      
-      // Simulación de registro exitoso
-      console.log('Usuario registrado:', formData);
+      await axios.post('http://localhost:3001/api/usuario/registro', formData, {
+        withCredentials: true
+      });
+
+      // Si todo salió bien, el backend debería devolver el usuario o mensaje
       alert('Registro exitoso!');
-      navigate('/login'); // Redirigir al login después del registro
+      navigate('/login');
     } catch (err) {
       setError('Error al registrar el usuario');
       console.error(err);

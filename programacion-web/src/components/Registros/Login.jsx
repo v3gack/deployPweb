@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'; // ← Faltaba `useEffect`
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../../styles/App.css';
-
 
 const Login = () => {
   const [loginData, setLoginData] = useState({
@@ -12,10 +12,23 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const usuario = localStorage.getItem('usuario');
-    if (usuario) {
-      navigate('/inicio'); // Ya está logueado
-    }
+    const verificarSesion = async () => {
+      try {
+        const res = await axios.get('http://localhost:3001/api/usuarios/perfil', {
+          withCredentials: true,
+        });
+
+        if (res.status === 200 && res.data.usuario) {
+          // Si hay sesión activa, redirige
+          navigate('/inicio');
+        }
+      } catch (err) {
+        console.log('No hay sesión activa');
+        // No hace falta redirigir, el usuario está en /login
+      }
+    };
+
+    verificarSesion();
   }, [navigate]);
 
   const handleChange = (e) => {
@@ -29,54 +42,29 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!loginData.email || !loginData.password) {
       setError('Email y contraseña son obligatorios');
       return;
     }
 
     try {
-      // Aquí iría la llamada a tu API para login
-      // Ejemplo:
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(loginData)
-      // });
-      // const data = await response.json();
-      
-      // Simulación de login exitoso
-      //console.log('Usuario logueado:', loginData);******
-      // Simulación de usuarios
-const usuariosHardcoded = [
-  { email: 'admin@admin.com', password: 'admin123', rol: 'administrador' },
-  { email: 'usuario@correo.com', password: 'usuario123', rol: 'usuario' }
-];
+      const response = await axios.post('http://localhost:3001/api/usuario/logueo', loginData, {
+        withCredentials: true
+      });
 
-const usuario = usuariosHardcoded.find(
-  (u) => u.email === loginData.email && u.password === loginData.password
-);
+      const usuario = response.data.usuario;
 
-  if (usuario) {
-  console.log('Login correcto', usuario);
-  localStorage.setItem('usuario', JSON.stringify(usuario)); // ← Guardamos al usuario
-  navigate('/inicio'); // <-- asegúrate que está aquí y no anidado innecesariamente
-} else {
-  setError('Credenciales incorrectas');
-}
-
-      
-      // Redirigir según el rol (simulado)
-     /* const rol = loginData.email.includes('admin') ? 'administrador' : 'usuario';
-      if (rol === 'administrador') {
-        navigate('/admin/dashboard');
+      if (usuario) {
+        const now = new Date().toISOString();
+        localStorage.setItem('usuario', JSON.stringify(usuario));
+        sessionStorage.setItem('fechaLogin', now);
+        navigate('/inicio');
       } else {
-        navigate('/usuario/perfil');
+        setError('Credenciales incorrectas');
       }
-        */
-      
     } catch (err) {
-      setError('Credenciales incorrectas');
+      setError('Error en el servidor o credenciales incorrectas');
       console.error(err);
     }
   };
@@ -112,12 +100,8 @@ const usuario = usuariosHardcoded.find(
       </form>
 
       <p>¿No tienes una cuenta? <span className="link" onClick={() => navigate('/registroUsuario')}>Regístrate aquí</span></p>
-
-
     </div>
   );
-    
-  
 };
 
 export default Login;

@@ -19,20 +19,20 @@ Comando para Inicar:
 
 # PASOS PARA INICIALIZAR EL BACK
 
-# ANTES DEBEN PREPARAR LO SIGUIENTE:
+# Antes deben preparar lo siguiente:
 - Instalar pnpm y typeScript
 - Crear el .env como en el .env.example
 - Cambiar los datos de la URL en el .env por los de su base de datos(PostgreSQL)
 
-# PASOS A SEGUIR PARA LA CONFIGURACION:  
+# Comandos a ejecutar:  
 - instalar dependencias => pnpm install 
 - iniciar typescript => npx tsc --init
 - iniciar prisma => npx prisma init
 
-# CREACION DEL USUARIO PRISMA Y LA BASE DE DATOS
+# Creacion del cliente y la base de datos con Prisma
 - pnpm prisma:generate
 - pnpm prisma:migrate
 Recomendacion: Reiniciar su editor de codigo para que los cambios sean establecidos.
 
-# INICIAR EL SERVIDOR
+# Iniciar el Servidor
 - pnpm dev

@@ -1,3 +1,5 @@
+//NO SE UTILIZA EL ARCHIVO
+
 import React, { useState } from 'react';
 import '../styles/preguntaCastor.css';
 

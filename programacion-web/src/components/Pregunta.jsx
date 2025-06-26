@@ -50,16 +50,20 @@ export default function Pregunta() {
 
   const handleDrop = (index, piezaJSON) => {
     const pieza = JSON.parse(piezaJSON);
+
+    if (slots[index]?.id === pieza.id) return;
     if (slots[index] !== null) return;
 
     setSlots((prev) => {
-      const nuevos = [...prev];
+      // Elimina la pieza de cualquier slot donde ya esté
+      const nuevos = prev.map((p, i) => (p?.id === pieza.id ? null : p));
       nuevos[index] = pieza;
       return nuevos;
     });
 
     setTray((prev) => prev.filter((p) => p.id !== pieza.id));
   };
+
 
   const handleReturn = (pieza, index) => {
     setSlots((prev) => {
@@ -177,7 +181,12 @@ export default function Pregunta() {
         ))}
         <span className="igual">=</span>
         <div className="slot solucion">
-          <img src={datos.imagenesAdicionales[0]} alt="resultado final" />
+          <img
+            src={datos.imagenesAdicionales[0]}
+            alt="resultado final"
+            draggable={false}
+            style={{ cursor: 'default' }}
+          />
         </div>
       </div>
 

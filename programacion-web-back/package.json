@@ -19,6 +19,8 @@
 		"ts-node": "^10.9.2",
 		"typescript": "^5.8.3"
 	},
+	"name": "backend",
+    "version": "1.0.0", 
 	"scripts": {
 		"dev": "ts-node src/index.ts",
 		"build": "tsc",

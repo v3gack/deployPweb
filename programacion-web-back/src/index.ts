@@ -6,10 +6,15 @@ import preguntasRoutes from './routes/pregunta.route';
 import usuarioRoutes from './routes/usuario.route';
 import dotenv from 'dotenv';
 
+import path from 'path';
+
 dotenv.config(); // Para poder usar variables de entorno (como SECRET)
 
 const app = express();
 const prisma = new PrismaClient();
+
+//dep
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
@@ -42,6 +47,15 @@ app.use('/api/pregunta', preguntasRoutes);
 app.use('/api/usuario', usuarioRoutes);
 
 // Inicio del servidor
-app.listen(3001, () => {
-  console.log('Servidor corriendo en http://localhost:3001');
+// app.listen(3001, () => {
+//   console.log('Servidor corriendo en http://localhost:3001');
+// });
+app.use(express.static(path.join(__dirname, '../../programacion-web/build')));
+
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../../programacion-web/build/index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Servidor escuchando en puerto ${PORT}`);
 });

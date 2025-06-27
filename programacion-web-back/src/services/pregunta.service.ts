@@ -1,6 +1,7 @@
 import prisma from '../../prisma/client';
 import { Pregunta, Dificultad, GradoEscolar } from '@prisma/client';
 
+
 // Tipo para creación SIN autorId (lo añadimos manualmente)
 type CrearPreguntaInput = {
   titulo: string;
